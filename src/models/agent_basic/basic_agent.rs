@@ -1,5 +1,5 @@
-use crate::models::general::llm::message;
-use crate::model::agent_basic::basic_traits::BasicTraits;
+use crate::models::main::llm::Message;
+use crate::models::agent_basic::basic_trait::BasicTraits;
 
 #[derive(Debug,PartialEq)]
 
@@ -16,7 +16,7 @@ pub struct BasicAgent{
     pub objective:String,
     pub position:String,
     pub state:AgentState,
-    pub memory:Vec<message>
+    pub memory:Vec<Message>
 }
 
 impl BasicTraits for BasicAgent{
@@ -28,25 +28,26 @@ impl BasicTraits for BasicAgent{
             memory:Vec::from([])
         }
     }
-}
+
 
 fn update_state(&mut self, new_state:AgentState){
     self.state = new_state;
 }
 
-fn get_objective(&self)-> String{
-    self.objective;
+fn get_objective(&self)-> &String{
+    &self.objective
 }
 
-fn get_position(&self)-> String{
-    self.position;
+fn get_position(&self)-> &String{
+    &self.position
 }
 
 fn get_state(&self)-> &AgentState {
-    self.position;
+    &self.state
 }
 
 
-fn get_memory(&self)-> &vec<Message>{
-    self.memory;
+fn get_memory(&self)-> &Vec<Message>{
+    &self.memory
+}
 }

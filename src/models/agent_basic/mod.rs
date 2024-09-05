@@ -1,2 +1,2 @@
-pub mod agent_basic;
-pub mod general;
+pub mod basic_agent;
+pub mod basic_trait;

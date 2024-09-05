@@ -51,7 +51,7 @@ pub async fn ai_task_request(
     String::from("something")
 }
 
-pub async fn ai_task_request_decode<T: DeserializeOwned>(
+pub async fn ai_task_request_decoded<T: DeserializeOwned>(
     msg_context: String,
     agent_position: &str,
     agent_operation: &str,
