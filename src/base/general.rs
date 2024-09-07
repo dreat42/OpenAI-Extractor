@@ -1,13 +1,12 @@
 use crate::base::command_line::PrintCommand;
 use crate::{models::main::llm::Message, requests::call_request::call_gpt};
-use serde::de::DeserializeOwned;
 use reqwest::Client;
+use serde::de::DeserializeOwned;
 use std::fs;
 
-const CODE_TEMPLATE_PATH:&str = "D:/code/rust_autogpt/web_template/src/code_template.rs";
-const EXEC_MAIN_PATH:&str ="D:/code/rust_autogpt/web_template/src/main.rs";
-const API_SCHEMA_PATH:&str ="D:/code/rust_autogpt/schemas/api_schema.json";
-
+const CODE_TEMPLATE_PATH: &str = "D:/code/rust_autogpt/web_template/src/code_template.rs";
+const EXEC_MAIN_PATH: &str = "D:/code/rust_autogpt/web_template/src/main.rs";
+const API_SCHEMA_PATH: &str = "D:/code/rust_autogpt/schemas/api_schema.json";
 
 pub fn external_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
     let ai_function_str = ai_func(func_input);
@@ -66,31 +65,28 @@ pub async fn ai_task_request_decoded<T: DeserializeOwned>(
     decoded_response
 }
 
-
-pub async fn check_status_code(client:&Client,url:&str)->Result<u16,reqwest::Error>{
+pub async fn check_status_code(client: &Client, url: &str) -> Result<u16, reqwest::Error> {
     let reponse: reqwest::Response = client.get(url).send().await?;
     Ok(reponse.status().as_u16())
 }
 
-pub fn read_code_template_contents()->String{
-    let path:String  = String::from(CODE_TEMPLATE_PATH);
+pub fn read_code_template_contents() -> String {
+    let path: String = String::from(CODE_TEMPLATE_PATH);
 
     fs::read_to_string(path).expect("Falied to read code template")
 }
 
-pub fn save_backend_code(contents:&String){
-    let path:String  = String::from(EXEC_MAIN_PATH);
+pub fn save_backend_code(contents: &String) {
+    let path: String = String::from(EXEC_MAIN_PATH);
 
-    fs::write(path,contents).expect("Falied to write main.rs template");
+    fs::write(path, contents).expect("Falied to write main.rs template");
 }
 
-pub fn save_api_endpoints(api_endpoints:&String){
-    let path:String  = String::from(EXEC_MAIN_PATH);
+pub fn save_api_endpoints(api_endpoints: &String) {
+    let path: String = String::from(EXEC_MAIN_PATH);
 
-    fs::write(path,api_endpoints).expect("Falied to write API Endpoinnts template");
+    fs::write(path, api_endpoints).expect("Falied to write API Endpoinnts template");
 }
-
-
 
 #[cfg(test)]
 mod tests {
