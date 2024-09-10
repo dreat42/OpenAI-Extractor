@@ -1,5 +1,5 @@
 use crate::ai_functions::backend::{self, print_backend_webserver_code, print_fixed_code, print_improved_webserver_code, print_rest_api_endpoints};
-use crate::base::command_line::PrintCommand;
+use crate::base::command_line::{PrintCommand,confirm_safe_code};
 use crate::base::general::{ai_task_request, ai_task_request_decoded, check_status_code, read_code_template_contents, read_exec_main_contents, save_api_endpoints, save_backend_code};
 use crate::models::agent_basic::basic_agent::BasicAgent;
 use crate::models::agent_basic::basic_trait::BasicTraits;
@@ -23,7 +23,7 @@ pub struct  AgentBackendDeveloper{
     bug_errors:Option<String>,
     bug_count:u8
 }
-
+ 
 impl AgentBackendDeveloper {
     pub fn new() ->Self{
         let attributes:BasicAgent = BasicAgent{
@@ -109,7 +109,7 @@ impl AgentBackendDeveloper {
     factsheet.backend_code =Some(ai_response);
     }
 
-    async  fn call_determine_external_api_endpoints(&self)->String{
+    async  fn call_extract_external_api_endpoints(&self)->String{
         let backend_code :String = read_exec_main_contents();
         let msg_context:String = format!("CODE_INPUT: {:?}",backend_code);
 
@@ -122,5 +122,85 @@ impl AgentBackendDeveloper {
        .await;
 
         ai_response
+    }
+}
+
+#[async_trait]
+impl SpecialFunctions for AgentBackendDeveloper{
+
+      fn get_attributes_from_agent(&self) -> &BasicAgent {
+        &self.attributes
+    } 
+
+      async fn execute(
+        &mut self,
+        factsheet: &mut FactSheet,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        while self.attributes.state != AgentState::Finished {
+            match  &self.attributes.state {
+                AgentState::Discovery=>{
+                    self.call_initial_backend_code(factsheet).await;
+                    self.attributes.state= AgentState::Working;
+                }
+                  AgentState::Working=>{
+                    if self.bug_count ==0{
+                        self.call_improved_backend_code(factsheet).await;
+                        self.attributes.state = AgentState::UnitTesting;
+                        continue;
+                    }
+                    else{
+                        self.call_fix_code_bugs(factsheet).await;
+                        self.attributes.state = AgentState::UnitTesting;
+                        continue;
+                    }
+                  }
+                      AgentState::UnitTesting=>{
+                         PrintCommand::UnitTest.print_agend_message(&self.attributes.position.as_str(),
+                        "Backend Code Unit Testing Requesting user input"
+                        );
+
+                        let is_safe_code = confirm_safe_code();
+                      
+                      if !is_safe_code{
+                        self.attributes.state= AgentState::Finished;
+                      }
+                      
+                         }
+                      _=>{}
+            }
+            
+        }
+        Ok(())
+    }
+    
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[tokio::test]
+    async fn test_writing_backend_code(){
+        let mut agent:AgentBackendDeveloper = AgentBackendDeveloper::new();
+    
+    let factsheet_str :&str = r#"{
+    "project_description": "build a website that fetches and tracks fitness with timezone information",
+    "project_scope": {
+        "is_crud_required": true,
+        "is_user_login_and_logout": true,
+        "is_external_urls_required": true
+    },
+    "external_urls": [
+        "http://worldtimeapi.org/api/timezone"
+    ],
+    "backend_code": null,
+    "api_endpoint_schema": null
+}
+"#;
+
+let mut factsheet :FactSheet = serde_json::from_str(factsheet_str).unwrap();
+
+agent.execute(&mut factsheet).await.expect("Failed to execute Backend Developer agent");
+
+
     }
 }
