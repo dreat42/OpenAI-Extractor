@@ -5,7 +5,9 @@ use serde::de::DeserializeOwned;
 use std::fs;
 
 const CODE_TEMPLATE_PATH: &str = "D:/code/rust_autogpt/web_template/src/code_template.rs";
-const EXEC_MAIN_PATH: &str = "D:/code/rust_autogpt/web_template/src/main.rs";
+pub const EXEC_MAIN_PATH: &str = "D:/code/rust_autogpt/web_template/src/main.rs";
+pub const WEB_SERVER_PROJECT_PATH: &str = "D:/code/rust_autogpt/web_template";
+
 const API_SCHEMA_PATH: &str = "D:/code/rust_autogpt/schemas/api_schema.json";
 
 pub fn external_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
@@ -76,13 +78,11 @@ pub fn read_code_template_contents() -> String {
     fs::read_to_string(path).expect("Falied to read code template")
 }
 
-
 pub fn read_exec_main_contents() -> String {
     let path: String = String::from(EXEC_MAIN_PATH);
 
     fs::read_to_string(path).expect("Falied to read code template")
 }
-
 
 pub fn save_backend_code(contents: &String) {
     let path: String = String::from(EXEC_MAIN_PATH);
