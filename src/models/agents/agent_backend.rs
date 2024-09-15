@@ -223,12 +223,12 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         "Build Code Unit Testing: Starting Web Server....",
                     );
 
-                    let run_backend_server: std::process::Output = Command::new("cargo")
+                    let mut run_backend_server: std::process::Child = Command::new("cargo")
                         .arg("run")
                         .current_dir(WEB_SERVER_PROJECT_PATH)
                         .stdout(Stdio::piped())
                         .stderr(Stdio::piped())
-                        .output()
+                        .spawn()
                         .expect("Failed to run backend application");
 
                     PrintCommand::UnitTest.print_agend_message(
@@ -239,7 +239,68 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     let seconds_sleep: Duration = Duration::from_secs(5);
                     time::sleep(seconds_sleep).await;
 
-                    self.attributes.state = AgentState::Finished;
+
+                    for endpoint in check_endpoints{
+                        let testing_msg: String = format!("Resting endpoint '{}'...",endpoint.route);
+                    
+                    PrintCommand::UnitTest.print_agend_message(
+                              self.attributes.position.as_str(),
+                              testing_msg.as_str()
+
+                    );
+
+                    let client:Client = Client::builder()
+                    .timeout(Duration::from_secs(5))
+                    .build()
+                    .unwrap();
+
+                    let url:String = format!("http://localhost:8080{}",endpoint.route);
+                    match check_status_code(&client, &url).await {
+                        Ok(status_code) =>{
+                                    if status_code != 200{
+                                        let err_msg:String = format!("WARNING: Failed to call backend url endpoint {}",endpoint.route);
+                                        PrintCommand::Issue.print_agend_message(
+                                            self.attributes.position.as_str(),
+                                            testing_msg.as_str()
+
+                                    );
+                                    }
+                        }
+                        Err(e)=>{
+                            run_backend_server
+                            .kill()
+                            .expect("Failed to kill backend web server");
+
+                        let err_msg :String = format!("Error checking backend {}",e);
+
+                        PrintCommand::Issue.print_agend_message(
+
+                            self.attributes.position.as_str(),
+                            err_msg.as_str()
+                        );
+
+                         
+                        }
+                        
+                    }
+                    
+                    }
+
+                    save_api_endpoints(&api_endpoints_str);
+
+                    PrintCommand::Issue.print_agend_message(self.attributes.position.as_str(),
+                "Backend testing complete...");
+
+                run_backend_server
+                    .kill()
+                    .expect("Failed to kill backend web server on completion");
+
+                self.attributes.state = AgentState::Finished;
+
+
+
+
+                   
                 }
                 _ => {}
             }
@@ -252,7 +313,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_writing_backend_code() {
+    async fn tests_backend_developer() {
         let mut agent: AgentBackendDeveloper = AgentBackendDeveloper::new();
 
         let factsheet_str: &str = r#"{
@@ -270,7 +331,24 @@ mod tests {
 }
 "#;
 
+//   let factsheet_str: &str = r#"{
+//     "project_description": "build a website which returns the current time",
+//     "project_scope": {
+//         "is_crud_required": false,
+//         "is_user_login_and_logout": false,
+//         "is_external_urls_required": false
+//     },
+//     "external_urls": [],
+//     "backend_code": null,
+//     "api_endpoint_schema": null
+// }
+// "#;
+
         let mut factsheet: FactSheet = serde_json::from_str(factsheet_str).unwrap();
+
+        // agent.attributes.state = AgentState::UnitTesting;
+
+        agent.attributes.state = AgentState::Discovery;
 
         agent
             .execute(&mut factsheet)
