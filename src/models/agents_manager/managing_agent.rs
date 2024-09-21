@@ -8,6 +8,9 @@ use crate::base::general::ai_task_request;
 
 use crate::models::agents::agent_architect::AgentSolutionArchitect;
 
+use crate::models::agents::agent_backend::AgentBackendDeveloper;
+
+
 use crate::models::main::llm::Message;
 
 #[derive(Debug)]
@@ -61,6 +64,8 @@ impl ManagingAgent {
 
     fn create_agents(&mut self) {
         self.add_agents(Box::new(AgentSolutionArchitect::new()));
+       self.add_agents(Box::new(AgentBackendDeveloper::new()));
+  
     }
 
     pub async fn execlude_project(&mut self) {
@@ -69,9 +74,9 @@ impl ManagingAgent {
             let agent_res: Result<(), Box<dyn std::error::Error>> =
                 agent.execute(&mut self.factsheet).await;
 
-            let agent_info: &BasicAgent = agent.get_attributes_from_agent();
+            // let agent_info: &BasicAgent = agent.get_attributes_from_agent();
 
-            dbg!(agent_info);
+            // dbg!(agent_info);
         }
     }
 }

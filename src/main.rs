@@ -12,8 +12,15 @@ mod models;
 mod requests;
 
 use base::command_line::get_user_response;
+use models::agents_manager::managing_agent::ManagingAgent;
 
-fn main() {
-    let usr_req: String = get_user_response("What webserver are we building today");
-    dbg!(usr_req);
+#[tokio::main]
+async fn main() {
+    let usr_req: String = get_user_response("What website are we building today");
+   
+   let mut managing_agend:ManagingAgent = ManagingAgent::new(usr_req)
+    .await
+    .expect("Error creating agent");
+   
+    dbg!(managing_agend);
 }
